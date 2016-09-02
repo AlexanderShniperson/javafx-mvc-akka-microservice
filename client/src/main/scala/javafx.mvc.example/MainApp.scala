@@ -1,0 +1,28 @@
+package javafx.mvc.example
+
+import javafx.application.Application
+import javafx.mvc.example.controller._
+import javafx.scene.Scene
+import javafx.stage.Stage
+import util.FXFormLoader
+
+object MainApp {
+  var launcher: AppLauncher = _
+
+  def main(args: Array[String]): Unit = {
+    launcher = new AppLauncher
+    launcher.run(args)
+  }
+}
+
+class AppLauncher extends Application {
+  def run(args: Array[String]) {
+    Application.launch(args: _*)
+  }
+
+  override def start(primaryStage: Stage): Unit = {
+    val (view, _) = FXFormLoader.loadFX[MainFormControllerImpl]("/fxml/MainFormView.fxml")
+    primaryStage.setScene(new Scene(view))
+    primaryStage.show()
+  }
+}

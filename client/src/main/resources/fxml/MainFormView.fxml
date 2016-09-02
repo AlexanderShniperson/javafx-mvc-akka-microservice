@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="javafx.mvc.example.controller.MainFormControllerImpl">
+    <children>
+        <MenuBar maxWidth="1.7976931348623157E308" VBox.vgrow="NEVER">
+            <menus>
+                <Menu mnemonicParsing="false" text="Operation">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#onClickCarSale" text="Car Sale"/>
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Edit">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#onClickEditCarModel" text="Car model"/>
+                        <MenuItem mnemonicParsing="false" onAction="#onClickEditCarType" text="Car type"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+        <TabPane fx:id="tabPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                 tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets/>
+            </VBox.margin>
+        </TabPane>
+    </children>
+</VBox>

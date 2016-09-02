@@ -1,0 +1,7 @@
+apply plugin: 'application'
+
+mainClassName = 'javafx.mvc.example.MainApp'
+
+dependencies {
+    compile project(':commons')
+}

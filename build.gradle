@@ -1,0 +1,42 @@
+subprojects {
+    apply plugin: 'scala'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+    }
+
+    ext.scalaBinaryVersion = "2.11"
+    ext.scalaMinorVersion = "8"
+    ext.akkaVersion = "2.4.8"
+
+    compileScala {
+        scalaCompileOptions.optimize = true
+        scalaCompileOptions.additionalParameters = ['-target:jvm-1.8', '-Ybackend:GenBCode', '-feature',
+                                                    '-Ydelambdafy:method', '-language:postfixOps', '-language:implicitConversions']
+    }
+
+    compileJava.options.encoding = 'UTF-8'
+    compileScala.options.encoding = 'UTF-8'
+
+    dependencies {
+        compile("org.scala-lang:scala-library:$scalaBinaryVersion.$scalaMinorVersion")
+        compile("com.typesafe.akka:akka-actor_$scalaBinaryVersion:$akkaVersion")
+    }
+
+    sourceSets {
+        main {
+            scala {
+                srcDirs = ['src/main/scala', 'src/main/java']
+            }
+            java {
+                srcDirs = []
+            }
+            resources {
+                srcDirs = ['src/main/resources']
+            }
+        }
+    }
+}

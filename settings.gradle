@@ -1,0 +1,11 @@
+rootProject.name = 'javafx-mvc-akka-microservice'
+
+include 'commons'
+project(':commons').projectDir = "$rootDir/commons" as File
+
+include 'client'
+project(':client').projectDir = "$rootDir/client" as File
+
+include 'server'
+project(':server').projectDir = "$rootDir/server" as File
+
