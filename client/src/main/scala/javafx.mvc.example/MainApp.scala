@@ -7,11 +7,23 @@ import javafx.stage.Stage
 import util.FXFormLoader
 
 object MainApp {
+
+  import akka.actor.ActorSystem
+  import com.typesafe.config.ConfigFactory
+  import com.typesafe.config.Config
+
   var launcher: AppLauncher = _
+  var config: Config = _
+  var system: ActorSystem = _
 
   def main(args: Array[String]): Unit = {
     launcher = new AppLauncher
     launcher.run(args)
+    config = ConfigFactory.load().getConfig("CarSaleClient")
+    system = ActorSystem("CarSaleClient", config)
+    sys.addShutdownHook({
+      MainApp.system.terminate()
+    })
   }
 }
 

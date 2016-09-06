@@ -1,7 +1,10 @@
-package akka.microservice.api.example
+package carsale.microservice.api.example
 
 @SerialVersionUID(1L)
 class ApiBaseMessage extends java.io.Serializable
+
+@SerialVersionUID(1L)
+case class ApiTransportMessage(data: Array[Byte], fromActor: Option[String], toActor: Option[String]) extends ApiBaseMessage
 
 object ApiMessages {
 

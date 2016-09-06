@@ -1,9 +1,10 @@
 package javafx.mvc.example.model
 
 import javafx.beans.property._
-import akka.microservice.api.example.ApiBaseMessage
+
 import akka.microservice.api.example.ApiMessages.CarModelApi.CarModelReply
 import akka.microservice.api.example.ApiMessages.CarTypeApi.CarTypeReply
+import carsale.microservice.api.example.ApiBaseMessage
 
 class CarSaleModel(aRecordState: RecordState.RecordState,
                    aId: Long,

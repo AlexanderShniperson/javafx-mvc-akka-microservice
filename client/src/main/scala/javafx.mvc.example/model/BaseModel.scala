@@ -2,7 +2,8 @@ package javafx.mvc.example.model
 
 import javafx.beans.property._
 import javafx.beans.value.{ChangeListener, ObservableValue}
-import akka.microservice.api.example.ApiBaseMessage
+
+import carsale.microservice.api.example.ApiBaseMessage
 
 object RecordState extends Enumeration {
   type RecordState = Value
