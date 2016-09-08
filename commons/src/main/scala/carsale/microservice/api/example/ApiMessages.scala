@@ -141,11 +141,11 @@ object ApiMessages {
 
     case class CarSaleReply(id: Long, ownerName: String, carModel: CarModelApi.CarModelReply, carType: CarTypeApi.CarTypeReply, yearMade: Int, mileage: Int, price: BigDecimal) extends ApiBaseMessage
 
-    case class CarSaleCreate(ownerName: String, carModel: CarModelApi.CarModelReply, carType: CarTypeApi.CarTypeReply, yearMade: Int, mileage: Int, price: BigDecimal) extends ApiBaseMessage
+    case class CarSaleCreate(ownerName: String, carModelId: Long, carTypeId: Long, yearMade: Int, mileage: Int, price: BigDecimal) extends ApiBaseMessage
 
     case class CarSaleCreateReply(data: CarSaleReply) extends ApiBaseMessage
 
-    case class CarSaleUpdate(id: Long, ownerName: String, carModel: CarModelApi.CarModelReply, carType: CarTypeApi.CarTypeReply, yearMade: Int, mileage: Int, price: BigDecimal) extends ApiBaseMessage
+    case class CarSaleUpdate(id: Long, ownerName: String, carModelId: Long, carTypeId: Long, yearMade: Int, mileage: Int, price: BigDecimal) extends ApiBaseMessage
 
     case class CarSaleUpdateReply(data: CarSaleReply) extends ApiBaseMessage
 

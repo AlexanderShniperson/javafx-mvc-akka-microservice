@@ -30,6 +30,7 @@ private class IOServer(host: String, port: Int, messageProcessor: ActorRef) exte
   }
 
   override def preStart() {
+    implicit val as = context.system
     IO(Tcp) ! Bind(self, new InetSocketAddress(host, port))
   }
 

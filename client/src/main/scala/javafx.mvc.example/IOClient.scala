@@ -87,6 +87,7 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
   private final def retryConnect(isNeedSleep: Boolean = true): Unit = {
     val conn = self
     import context.dispatcher
+    implicit val as = context.system
     Future {
       if (isNeedSleep) Thread.sleep(1000)
       IO(Tcp).tell(Connect(new InetSocketAddress(serverHost, serverPort)), conn)

@@ -1,10 +1,8 @@
 package javafx.mvc.example.model
 
 import javafx.beans.property._
-
-import akka.microservice.api.example.ApiMessages.CarModelApi.CarModelReply
-import akka.microservice.api.example.ApiMessages.CarTypeApi.CarTypeReply
 import carsale.microservice.api.example.ApiBaseMessage
+import carsale.microservice.api.example.ApiMessages.CarSaleApi.{CarSaleCreate, CarSaleUpdate}
 
 class CarSaleModel(aRecordState: RecordState.RecordState,
                    aId: Long,
@@ -25,7 +23,24 @@ class CarSaleModel(aRecordState: RecordState.RecordState,
 
   override def toResponse(): ApiBaseMessage = ???
 
-  override def toCreateRequest(): ApiBaseMessage = ???
+  override def toCreateRequest(): ApiBaseMessage = {
+    CarSaleCreate(
+      ownerName = ownerName.get(),
+      carModelId = carModel.get().id.get(),
+      carTypeId = carType.get().id.get(),
+      yearMade = yearMade.get(),
+      mileage = mileage.get(),
+      price = price.get())
+  }
 
-  override def toUpdateRequest(): ApiBaseMessage = ???
+  override def toUpdateRequest(): ApiBaseMessage = {
+    CarSaleUpdate(
+      id = id.get(),
+      ownerName = ownerName.get(),
+      carModelId = carModel.get().id.get(),
+      carTypeId = carType.get().id.get(),
+      yearMade = yearMade.get(),
+      mileage = mileage.get(),
+      price = price.get())
+  }
 }

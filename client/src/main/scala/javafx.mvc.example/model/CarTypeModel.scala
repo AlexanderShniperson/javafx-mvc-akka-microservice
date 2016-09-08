@@ -3,6 +3,7 @@ package javafx.mvc.example.model
 import javafx.beans.property._
 
 import carsale.microservice.api.example.ApiBaseMessage
+import carsale.microservice.api.example.ApiMessages.CarTypeApi.{CarTypeCreate, CarTypeUpdate}
 
 class CarTypeModel(aRecordState: RecordState.RecordState,
                    aId: Long,
@@ -13,7 +14,16 @@ class CarTypeModel(aRecordState: RecordState.RecordState,
 
   override def toResponse(): ApiBaseMessage = ???
 
-  override def toCreateRequest(): ApiBaseMessage = ???
+  override def toCreateRequest(): ApiBaseMessage = {
+    CarTypeCreate(
+      name = name.get()
+    )
+  }
 
-  override def toUpdateRequest(): ApiBaseMessage = ???
+  override def toUpdateRequest(): ApiBaseMessage = {
+    CarTypeUpdate(
+      id = id.get(),
+      name = name.get()
+    )
+  }
 }
