@@ -5,14 +5,16 @@ import com.typesafe.config.{Config, ConfigFactory}
 
 object MainApp {
   var config: Config = _
-  var system: ActorSystem = _
+  private var system: ActorSystem = _
+  private var messageProcessor = ActorRef.noSender
 
   def main(args: Array[String]): Unit = {
     config = ConfigFactory.load().getConfig("CarSaleServer")
     system = ActorSystem("CarSaleServer", config)
+    messageProcessor = system.actorOf(MessageProcessor.props(), "MessageProcessor")
     sys.addShutdownHook({
       MainApp.system.terminate()
     })
-    system.actorOf(IOServer.props(config.getString("io.hostName"), config.getInt("io.hostPort"), system.actorOf(MessageProcessor.props())))
+    system.actorOf(IOServer.props(config.getString("io.hostName"), config.getInt("io.hostPort"), messageProcessor))
   }
 }

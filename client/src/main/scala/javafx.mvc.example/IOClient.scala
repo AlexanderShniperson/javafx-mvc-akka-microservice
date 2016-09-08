@@ -2,22 +2,27 @@ package javafx.mvc.example
 
 import java.net.InetSocketAddress
 import akka.actor._
-import akka.serialization.Serializer
+import akka.serialization._
+import akka.util.ByteString
+import carsale.microservice.api.example.{ApiBaseMessage, ApiIncomingMessage, MessageProxyRouterActor}
 import scala.concurrent.Future
 
 object IOClient {
-  def props(remote: InetSocketAddress, serializer: Serializer) =
-    Props(classOf[IOClient], remote, serializer)
+  def props(serverHost: String, serverPort: Int) =
+    Props(classOf[IOClient], serverHost, serverPort)
 }
 
-class IOClient(address: InetSocketAddress, serializer: Serializer) extends Actor with ActorLogging {
+class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogging {
 
   import akka.actor._
   import akka.io.Tcp._
   import akka.io.{IO, Tcp}
-  import context.system
 
-  import concurrent.duration._
+  val serialization = SerializationExtension(context.system)
+  val serializer = serialization.findSerializerFor(new ApiBaseMessage)
+  val proxyRouter = context.actorOf(MessageProxyRouterActor.props(self, Actor.noSender, serializer), "cPR_" + (math.random * 10000))
+  private val maxTimeoutCount = 12
+  private var timeoutCount = maxTimeoutCount
 
   @scala.throws[Exception](classOf[Exception])
   override def preStart(): Unit = {
@@ -25,16 +30,13 @@ class IOClient(address: InetSocketAddress, serializer: Serializer) extends Actor
     retryConnect(false)
   }
 
-  private val maxTimeoutCount = 12
-  private var timeoutCount = maxTimeoutCount
-
   def receive = {
     case cf@CommandFailed(_: Connect) ⇒
       log.warning(s"\n[IOClient] $cf from: ${sender()}")
       retryConnect()
 
     case x: Connect =>
-      log.warning(s"\n [IOClient] $x from: ${sender()}")
+      log.warning(s"\n[IOClient] $x from: ${sender()}")
       retryConnect()
 
     case c@Connected(remote, local) ⇒
@@ -47,8 +49,18 @@ class IOClient(address: InetSocketAddress, serializer: Serializer) extends Actor
     case ReceiveTimeout =>
       retryConnect()
 
-    case rc: Received =>
-      log.warning("IOClient received data (Received(data)) in (maybe?) closed state")
+    case Received(data) =>
+      proxyRouter ! serializer.fromBinary(data.toArray)
+
+    /**
+      * Send message to Server
+      */
+    case msg: ApiBaseMessage => self ! Write(
+      ByteString.fromArray(
+        serializer.toBinary(
+          ApiIncomingMessage(serializer.toBinary(msg),
+            sender().path.toStringWithoutAddress,
+            None))))
 
     case unhandled => log.error(s"[ IOClient ] receive Received unhandled: $unhandled")
   }
@@ -77,7 +89,7 @@ class IOClient(address: InetSocketAddress, serializer: Serializer) extends Actor
     import context.dispatcher
     Future {
       if (isNeedSleep) Thread.sleep(1000)
-      IO(Tcp).tell(Connect(address), conn)
+      IO(Tcp).tell(Connect(new InetSocketAddress(serverHost, serverPort)), conn)
     }
   }
 }

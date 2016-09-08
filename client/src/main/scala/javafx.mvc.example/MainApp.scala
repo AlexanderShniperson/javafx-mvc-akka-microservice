@@ -5,6 +5,7 @@ import javafx.mvc.example.controller._
 import javafx.scene.Scene
 import javafx.stage.Stage
 import util.FXFormLoader
+import akka.actor._
 
 object MainApp {
 
@@ -15,6 +16,7 @@ object MainApp {
   var launcher: AppLauncher = _
   var config: Config = _
   var system: ActorSystem = _
+  var ioConnection = Actor.noSender
 
   def main(args: Array[String]): Unit = {
     launcher = new AppLauncher
@@ -36,5 +38,6 @@ class AppLauncher extends Application {
     val (view, _) = FXFormLoader.loadFX[MainFormControllerImpl]("/fxml/MainFormView.fxml")
     primaryStage.setScene(new Scene(view))
     primaryStage.show()
+    MainApp.system.actorOf(IOClient.props("localhost", 10105))
   }
 }
