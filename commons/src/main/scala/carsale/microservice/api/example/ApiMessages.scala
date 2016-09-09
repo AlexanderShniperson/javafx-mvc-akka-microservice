@@ -4,10 +4,13 @@ package carsale.microservice.api.example
 class ApiBaseMessage extends java.io.Serializable
 
 @SerialVersionUID(1L)
-case class ApiIncomingMessage(data: Array[Byte], fromActor: String, toActor: Option[String]) extends ApiBaseMessage
+class ApiTransportMessage extends java.io.Serializable
 
 @SerialVersionUID(1L)
-case class RemoteTerminated(from: Option[String]) extends ApiBaseMessage
+case class ApiIncomingMessage(data: Array[Byte], fromActor: String, toActor: Option[String]) extends ApiTransportMessage
+
+@SerialVersionUID(1L)
+case class RemoteTerminated(from: Option[String]) extends ApiTransportMessage
 
 object ApiMessages {
 

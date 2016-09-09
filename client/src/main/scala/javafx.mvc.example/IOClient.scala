@@ -3,8 +3,6 @@ package javafx.mvc.example
 import java.net.InetSocketAddress
 import akka.actor._
 import akka.serialization._
-import akka.util.ByteString
-import carsale.microservice.api.example.{ApiBaseMessage, ApiIncomingMessage, MessageProxyRouterActor}
 import scala.concurrent.Future
 
 object IOClient {
@@ -17,6 +15,8 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
   import akka.actor._
   import akka.io.Tcp._
   import akka.io.{IO, Tcp}
+  import carsale.microservice.api.example.{ApiBaseMessage, MessageProxyRouterActor}
+  import carsale.microservice.api.example.MessageProxyRouterActor.ApiOutgoingMessage
 
   val serialization = SerializationExtension(context.system)
   val serializer = serialization.findSerializerFor(new ApiBaseMessage)
@@ -43,32 +43,20 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
       log.info(s"\n [IOClient] Connected($remote, $local)\n")
       val connection = sender()
       connection ! Register(self)
-      log.info("Client connected to server, become to 'connectionVerification'")
       context become connected(connection)
 
     case ReceiveTimeout =>
       retryConnect()
-
-    case Received(data) =>
-      proxyRouter ! serializer.fromBinary(data.toArray)
-
-    /**
-      * Send message to Server
-      */
-    case msg: ApiBaseMessage => self ! Write(
-      ByteString.fromArray(
-        serializer.toBinary(
-          ApiIncomingMessage(serializer.toBinary(msg),
-            sender().path.toStringWithoutAddress,
-            None))))
 
     case unhandled => log.error(s"[ IOClient ] receive Received unhandled: $unhandled")
   }
 
   private def connected(connection: ActorRef): Receive = {
     case Received(data) =>
-      serializer.fromBinary(data.toArray)
+      proxyRouter ! serializer.fromBinary(data.toArray)
       timeoutCount = maxTimeoutCount
+
+    case msg: ApiBaseMessage => proxyRouter.forward(ApiOutgoingMessage(msg, sender().path.toSerializationFormat, None))
 
     case ReceiveTimeout ⇒
       timeoutCount -= 1
