@@ -28,10 +28,8 @@ private class MessageProxyRemoteActor(proxyRouter: ActorRef, to: String) extends
   }
 
   private def sendOut(data: AnyRef, senderRef: ActorRef): Unit = {
-    proxyRouter.tell(
-      ApiOutgoingMessage(data,
-        fromActor = senderRef.path.toSerializationFormat,
-        toActor = Some(to)),
-      senderRef)
+    proxyRouter ! ApiOutgoingMessage(data,
+      fromActor = senderRef.path.toSerializationFormat,
+      toActor = Some(to))
   }
 }
