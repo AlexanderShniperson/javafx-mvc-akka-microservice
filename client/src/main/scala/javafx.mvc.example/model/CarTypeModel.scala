@@ -3,7 +3,13 @@ package javafx.mvc.example.model
 import javafx.beans.property._
 
 import carsale.microservice.api.example.ApiBaseMessage
-import carsale.microservice.api.example.ApiMessages.CarTypeApi.{CarTypeCreate, CarTypeUpdate}
+import carsale.microservice.api.example.ApiMessages.CarTypeApi.{CarTypeCreate, CarTypeReply, CarTypeUpdate}
+
+object CarTypeModel {
+  def fromReply(reply: CarTypeReply): CarTypeModel = {
+    new CarTypeModel(RecordState.None, reply.id, reply.name)
+  }
+}
 
 class CarTypeModel(aRecordState: RecordState.RecordState,
                    aId: Long,

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity"
+      xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="javafx.mvc.example.controller.CarModelControllerImpl">
+    <children>
+        <TableView fx:id="tvItems" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+            <columns>
+                <TableColumn fx:id="colModelName" prefWidth="250.0" text="Model name"/>
+            </columns>
+        </TableView>
+    </children>
+</VBox>

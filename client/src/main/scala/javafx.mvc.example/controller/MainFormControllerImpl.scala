@@ -3,7 +3,7 @@ package javafx.mvc.example.controller
 import java.net.URL
 import java.util.ResourceBundle
 import javafx.event.{ActionEvent, Event, EventHandler}
-import javafx.mvc.example.util.{FXLifeView, LifeViewClosed}
+import javafx.mvc.example.util.{FXFormLoader, FXLifeView, LifeViewClosed}
 import javafx.scene.Parent
 import javafx.scene.control.Tab
 
@@ -37,10 +37,12 @@ class MainFormControllerImpl extends MainFormController {
   }
 
   override def onClickEditCarModel(event: ActionEvent): Unit = {
-
+    val (view, ctrl) = FXFormLoader.loadFX[CarModelControllerImpl]("/fxml/CarModelView.fxml")
+    openTab[CarModelControllerImpl]("Car model", view, ctrl)
   }
 
   override def onClickEditCarType(event: ActionEvent): Unit = {
-
+    val (view, ctrl) = FXFormLoader.loadFX[CarTypeControllerImpl]("/fxml/CarTypeView.fxml")
+    openTab[CarTypeControllerImpl]("Car type", view, ctrl)
   }
 }

@@ -1,10 +1,11 @@
 package javafx.mvc.example
 
-import javafx.application.Application
+import javafx.application.{Application, Platform}
 import javafx.mvc.example.controller._
 import javafx.scene.Scene
 import javafx.stage.Stage
 import util.FXFormLoader
+
 import akka.actor._
 
 object MainApp {
@@ -19,12 +20,21 @@ object MainApp {
   var ioConnection = Actor.noSender
 
   def main(args: Array[String]): Unit = {
-    launcher = new AppLauncher
-    launcher.run(args)
     config = ConfigFactory.load().getConfig("CarSaleClient")
     system = ActorSystem("CarSaleClient", config)
+    ioConnection = system.actorOf(IOClient.props("localhost", 10105))
     sys.addShutdownHook({
       MainApp.system.terminate()
+    })
+    launcher = new AppLauncher
+    launcher.run(args)
+  }
+
+  def runLater(operation: => Unit): Unit = {
+    Platform.runLater(new Runnable {
+      def run(): Unit = {
+        operation
+      }
     })
   }
 }
@@ -38,6 +48,5 @@ class AppLauncher extends Application {
     val (view, _) = FXFormLoader.loadFX[MainFormControllerImpl]("/fxml/MainFormView.fxml")
     primaryStage.setScene(new Scene(view))
     primaryStage.show()
-    MainApp.system.actorOf(IOClient.props("localhost", 10105))
   }
 }
