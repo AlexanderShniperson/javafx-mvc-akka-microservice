@@ -14,7 +14,7 @@ private class ConnectionHandler(connection: ActorRef, remote: InetSocketAddress,
 
   import akka.io.Tcp._
 
-  val proxyRouter = context.actorOf(MessageProxyRouterActor.props(self, messageProcessor, serializer))
+  val proxyRouter = context.actorOf(MessageProxyRouterActor.props(connection, messageProcessor, serializer))
 
   override def receive: Receive = {
     case Received(data) ⇒

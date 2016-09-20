@@ -38,7 +38,7 @@ private class ApiMessageProxyRouterActor(connectionHandler: ActorRef, messagePro
           toActorRef.tell(deserializeMsg(bytes), remoteProxy)
       }
 
-    case ApiOutgoingMessage(data, from, to) =>
+    case msg@ApiOutgoingMessage(data, from, to) =>
       if (from == sender().path.toSerializationFormat && localRefs.get(from.hashCode).isEmpty) {
         context.watch(sender())
         localRefs = localRefs.updated(from.hashCode, sender())
@@ -68,7 +68,7 @@ private class ApiMessageProxyRouterActor(connectionHandler: ActorRef, messagePro
   }
 
   def serializeMsg(data: AnyRef, from: String, to: Option[String]): ByteString = {
-    ByteString.fromArray(serializer.toBinary(ApiIncomingMessage(serializer.toBinary(data), from, to)))
+    ByteString(serializer.toBinary(ApiIncomingMessage(serializer.toBinary(data), from, to)))
   }
 
   def deserializeMsg(data: Array[Byte]): AnyRef = {

@@ -7,7 +7,7 @@ import javafx.mvc.example.MainApp
 import javafx.mvc.example.model.CarModelModel
 import javafx.mvc.example.util.FXLifeView
 import akka.actor._
-import carsale.microservice.api.example.ApiMessages.CarModelApi._
+import carsale.microservice.api.example.ApiMessages._
 
 class CarModelManager(ctrl: CarModelControllerImpl) extends Actor with ActorLogging {
   override def receive: Receive = {
@@ -19,7 +19,7 @@ class CarModelManager(ctrl: CarModelControllerImpl) extends Actor with ActorLogg
 }
 
 class CarModelControllerImpl extends CarModelController with FXLifeView {
-  val items: ObservableList[CarModelModel] = FXCollections.emptyObservableList[CarModelModel]()
+  val items: ObservableList[CarModelModel] = FXCollections.observableArrayList[CarModelModel]()
 
   override def initialize(location: URL, resources: ResourceBundle): Unit = {
     manager = Option(MainApp.system.actorOf(Props(classOf[CarModelManager], this)))

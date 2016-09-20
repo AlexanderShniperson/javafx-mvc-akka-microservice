@@ -20,7 +20,6 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
 
   val serialization = SerializationExtension(context.system)
   val serializer = serialization.findSerializerFor(new ApiBaseMessage)
-  val proxyRouter = context.actorOf(MessageProxyRouterActor.props(self, Actor.noSender, serializer), "cPR_" + (math.random * 10000))
   private val maxTimeoutCount = 12
   private var timeoutCount = maxTimeoutCount
 
@@ -43,7 +42,8 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
       log.info(s"\n [IOClient] Connected($remote, $local)\n")
       val connection = sender()
       connection ! Register(self)
-      context become connected(connection)
+      val proxyRouter = context.actorOf(MessageProxyRouterActor.props(connection, Actor.noSender, serializer), "cPR_" + (math.random * 10000))
+      context become connected(connection, proxyRouter)
 
     case ReceiveTimeout =>
       retryConnect()
@@ -51,7 +51,7 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
     case unhandled => log.error(s"[ IOClient ] receive Received unhandled: $unhandled")
   }
 
-  private def connected(connection: ActorRef): Receive = {
+  private def connected(connection: ActorRef, proxyRouter: ActorRef): Receive = {
     case Received(data) =>
       proxyRouter ! serializer.fromBinary(data.toArray)
       timeoutCount = maxTimeoutCount
@@ -78,7 +78,7 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
     implicit val as = context.system
     Future {
       if (isNeedSleep) Thread.sleep(1000)
-      IO(Tcp).tell(Connect(new InetSocketAddress(serverHost, serverPort)), conn)
+      IO(Tcp).tell(Connect(remoteAddress = new InetSocketAddress(serverHost, serverPort)), conn)
     }
   }
 }

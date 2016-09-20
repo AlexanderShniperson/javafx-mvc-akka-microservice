@@ -16,6 +16,8 @@ private class MessageProxyRemoteActor(proxyRouter: ActorRef, to: String) extends
 
   context.setReceiveTimeout(20.minutes)
 
+  log.info(s"[MessageProxyRemoteActor] created for $to")
+
   def receive = {
     case msg: RemoteTerminated =>
       context.parent ! msg

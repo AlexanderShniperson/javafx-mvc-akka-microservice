@@ -14,7 +14,7 @@ case class RemoteTerminated(from: Option[String]) extends ApiTransportMessage
 
 object ApiMessages {
 
-  object CarModelApi {
+  //object CarModelApi {
 
     /**
       * Request car model, if 'id' is defined then returns only one 'CarModelReply' else returns many 'CarModelReply'
@@ -74,9 +74,9 @@ object ApiMessages {
       */
     case class CarModelRemoveReply(id: Long) extends ApiBaseMessage
 
-  }
+  //}
 
-  object CarTypeApi {
+  //object CarTypeApi {
 
     /**
       * Request car type, if 'id' is defined then returns only one 'CarTypeReply' else returns many 'CarTypeReply'
@@ -136,13 +136,13 @@ object ApiMessages {
       */
     case class CarTypeRemoveReply(id: Long) extends ApiBaseMessage
 
-  }
+  //}
 
   object CarSaleApi {
 
     case class GetCarSale(id: Option[Long] = None) extends ApiBaseMessage
 
-    case class CarSaleReply(id: Long, ownerName: String, carModel: CarModelApi.CarModelReply, carType: CarTypeApi.CarTypeReply, yearMade: Int, mileage: Int, price: BigDecimal) extends ApiBaseMessage
+    case class CarSaleReply(id: Long, ownerName: String, carModel: CarModelReply, carType: CarTypeReply, yearMade: Int, mileage: Int, price: BigDecimal) extends ApiBaseMessage
 
     case class CarSaleCreate(ownerName: String, carModelId: Long, carTypeId: Long, yearMade: Int, mileage: Int, price: BigDecimal) extends ApiBaseMessage
 

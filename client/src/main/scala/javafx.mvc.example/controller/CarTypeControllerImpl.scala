@@ -4,25 +4,30 @@ import java.net.URL
 import java.util.ResourceBundle
 import javafx.collections.{FXCollections, ObservableList}
 import javafx.mvc.example.MainApp
-import javafx.mvc.example.model.CarTypeModel
-import javafx.mvc.example.util.FXLifeView
+import javafx.mvc.example.model.{CarTypeModel, RecordState}
+import javafx.mvc.example.util.{FXBind, FXLifeView}
+
 import akka.actor._
-import carsale.microservice.api.example.ApiMessages.CarTypeApi._
+import carsale.microservice.api.example.ApiMessages._
 
 class CarTypeManager(ctrl: CarTypeControllerImpl) extends Actor with ActorLogging {
   override def receive: Receive = {
     case msg: GetCarType => MainApp.ioConnection ! msg
-    case msg: CarTypeReply => MainApp.runLater({
-      ctrl.items.add(CarTypeModel.fromReply(msg))
-    })
+    case msg: CarTypeReply => MainApp.runLater(ctrl.addItem(new CarTypeModel(RecordState.None, msg.id, msg.name)))
   }
 }
 
 class CarTypeControllerImpl extends CarTypeController with FXLifeView {
-  val items: ObservableList[CarTypeModel] = FXCollections.emptyObservableList()
+  private val items: ObservableList[CarTypeModel] = FXCollections.observableArrayList[CarTypeModel]()
 
   override def initialize(location: URL, resources: ResourceBundle): Unit = {
     manager = Option(MainApp.system.actorOf(Props(classOf[CarTypeManager], this)))
     manager.foreach(_ ! GetCarType(None))
+    FXBind.bindStringObservableCVF[CarTypeModel](colTypeName, _.name)
+    tvItems.setItems(items)
+  }
+
+  def addItem(value: CarTypeModel): Unit = {
+    items.add(value)
   }
 }

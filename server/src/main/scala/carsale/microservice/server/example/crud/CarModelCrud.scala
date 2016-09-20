@@ -1,7 +1,8 @@
 package carsale.microservice.server.example.crud
 
 import akka.actor._
-import carsale.microservice.api.example.ApiMessages.CarModelApi.{CarModelReply, GetCarModel}
+//import carsale.microservice.api.example.ApiMessages.CarModelApi.{CarModelReply, GetCarModel}
+import carsale.microservice.api.example.ApiMessages._
 
 object CarModelCrud {
   def props(): Props = {

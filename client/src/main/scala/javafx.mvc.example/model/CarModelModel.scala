@@ -3,7 +3,7 @@ package javafx.mvc.example.model
 import javafx.beans.property._
 
 import carsale.microservice.api.example.ApiBaseMessage
-import carsale.microservice.api.example.ApiMessages.CarModelApi.{CarModelCreate, CarModelReply, CarModelUpdate}
+import carsale.microservice.api.example.ApiMessages._
 
 object CarModelModel {
   def fromReply(reply: CarModelReply): CarModelModel = {
