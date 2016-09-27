@@ -10,15 +10,18 @@ object ConnectionHandler {
     Props(classOf[ConnectionHandler], connection, remote, messageProcessor, serializer)
 }
 
-private class ConnectionHandler(connection: ActorRef, remote: InetSocketAddress, messageProcessor: ActorRef, serializer: Serializer) extends Actor with ActorLogging {
+private class ConnectionHandler(connectionRef: ActorRef, remote: InetSocketAddress, messageProcessor: ActorRef, serializer: Serializer)
+  extends Actor
+    with ActorLogging {
 
   import akka.io.Tcp._
 
-  val proxyRouter = context.actorOf(MessageProxyRouterActor.props(connection, messageProcessor, serializer))
+  val proxyRouter = context.actorOf(MessageProxyRouterActor.props(connectionRef, messageProcessor, serializer))
 
   override def receive: Receive = {
-    case Received(data) ⇒
-      proxyRouter ! serializer.fromBinary(data.toArray)
+    case msg: Received ⇒
+      log.info(s"[ ClientConnectionHandler ] ReceiveData")
+      proxyRouter ! msg
 
     case ReceiveTimeout ⇒
       log.info(s"ConnectionHandler: Closing connection by receive timeout [$remote]")
@@ -37,7 +40,7 @@ private class ConnectionHandler(connection: ActorRef, remote: InetSocketAddress,
   }
 
   private final def closeConnection() = {
-    connection ! Close
+    connectionRef ! Close
     context stop self
   }
 }

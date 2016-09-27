@@ -13,7 +13,9 @@ import carsale.microservice.api.example.ApiMessages._
 class CarTypeManager(ctrl: CarTypeControllerImpl) extends Actor with ActorLogging {
   override def receive: Receive = {
     case msg: GetCarType => MainApp.ioConnection ! msg
-    case msg: CarTypeReply => MainApp.runLater(ctrl.addItem(new CarTypeModel(RecordState.None, msg.id, msg.name)))
+    case msg: CarTypeReply =>
+      // log.info(s">>> Received $msg")
+      // ctrl.addItem(new CarTypeModel(RecordState.None, msg.id, msg.name))
   }
 }
 
@@ -21,10 +23,11 @@ class CarTypeControllerImpl extends CarTypeController with FXLifeView {
   private val items: ObservableList[CarTypeModel] = FXCollections.observableArrayList[CarTypeModel]()
 
   override def initialize(location: URL, resources: ResourceBundle): Unit = {
-    manager = Option(MainApp.system.actorOf(Props(classOf[CarTypeManager], this)))
-    manager.foreach(_ ! GetCarType(None))
     FXBind.bindStringObservableCVF[CarTypeModel](colTypeName, _.name)
     tvItems.setItems(items)
+
+    manager = Option(MainApp.system.actorOf(Props(classOf[CarTypeManager], this)))
+    manager.foreach(_ ! GetCarType(None))
   }
 
   def addItem(value: CarTypeModel): Unit = {

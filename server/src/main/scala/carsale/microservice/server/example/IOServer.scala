@@ -22,16 +22,16 @@ private class IOServer(host: String, port: Int, messageProcessor: ActorRef) exte
   val serializer = serialization.findSerializerFor(new ApiBaseMessage)
 
   override def receive: Receive = {
-    case b@Bound(localAddress) => log.info(s"\\n\\n[ IOServer ] :: bounded to $host:$port")
+    case b@Bound(localAddress) => log.info(s"\n\n[ IOServer ] :: bounded to $host:$port")
     case x@CommandFailed(_: Bind) => throw new IllegalStateException(s"orig: $x")
-    case Unbound => context become receive
     case Connected(remote, local) => sender() ! connect(local, remote, sender())
-    case any => log.warning(s"bounded: Unhandled message received [$any]")
+    case any => log.warning(s"Unhandled message received [$any]")
   }
 
   override def preStart() {
     implicit val as = context.system
-    IO(Tcp) ! Bind(self, new InetSocketAddress(host, port))
+    val opts = List(SO.TcpNoDelay(on = true))
+    IO(Tcp) ! Bind(handler = self, localAddress = new InetSocketAddress(host, port), options = opts)
   }
 
   private def connect(local: InetSocketAddress, remote: InetSocketAddress, sender: ActorRef): Register = {

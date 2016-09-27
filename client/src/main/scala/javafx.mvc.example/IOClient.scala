@@ -1,8 +1,11 @@
 package javafx.mvc.example
 
 import java.net.InetSocketAddress
+
 import akka.actor._
 import akka.serialization._
+import carsale.microservice.api.example.{MessageExtractor, MessageSerializer}
+
 import scala.concurrent.Future
 
 object IOClient {
@@ -10,7 +13,9 @@ object IOClient {
     Props(classOf[IOClient], serverHost, serverPort)
 }
 
-class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogging {
+class IOClient(serverHost: String, serverPort: Int)
+  extends Actor
+    with ActorLogging {
 
   import akka.actor._
   import akka.io.Tcp._
@@ -29,7 +34,7 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
     retryConnect(false)
   }
 
-  def receive = {
+  override def receive = {
     case cf@CommandFailed(_: Connect) ⇒
       log.warning(s"\n[IOClient] $cf from: ${sender()}")
       retryConnect()
@@ -52,18 +57,21 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
   }
 
   private def connected(connection: ActorRef, proxyRouter: ActorRef): Receive = {
-    case Received(data) =>
-      proxyRouter ! serializer.fromBinary(data.toArray)
-      timeoutCount = maxTimeoutCount
+    case msg: Received =>
+      log.info(s"[ IOClient ] ReceivedData(${msg.data.length})")
+      proxyRouter ! msg
+    //      timeoutCount = maxTimeoutCount
 
-    case msg: ApiBaseMessage => proxyRouter.forward(ApiOutgoingMessage(msg, sender().path.toSerializationFormat, None))
+    case msg: ApiBaseMessage =>
+      log.info(s"[ IOClient ] MessageToServer($msg)")
+      proxyRouter.forward(ApiOutgoingMessage(msg, sender().path.toSerializationFormat, None))
 
-    case ReceiveTimeout ⇒
-      timeoutCount -= 1
-      if (timeoutCount <= 0) {
-        context.stop(self)
-        log.warning(s"IOClient connected Received KeepAlive ReceiveTimeout")
-      }
+    //    case ReceiveTimeout ⇒
+    //      timeoutCount -= 1
+    //      if (timeoutCount <= 0) {
+    //        context.stop(self)
+    //        log.warning(s"IOClient connected Received KeepAlive ReceiveTimeout")
+    //      }
 
     case cc: ConnectionClosed =>
       log.info(s"IOClient ConnectionClosed: $cc")
@@ -76,9 +84,9 @@ class IOClient(serverHost: String, serverPort: Int) extends Actor with ActorLogg
     val conn = self
     import context.dispatcher
     implicit val as = context.system
-    Future {
-      if (isNeedSleep) Thread.sleep(1000)
-      IO(Tcp).tell(Connect(remoteAddress = new InetSocketAddress(serverHost, serverPort)), conn)
-    }
+    //Future {
+    if (isNeedSleep) Thread.sleep(1000)
+    IO(Tcp).tell(Connect(remoteAddress = new InetSocketAddress(serverHost, serverPort)), conn)
+    //}
   }
 }

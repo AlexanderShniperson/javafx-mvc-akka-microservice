@@ -30,8 +30,15 @@ private class MessageProxyRemoteActor(proxyRouter: ActorRef, to: String) extends
   }
 
   private def sendOut(data: AnyRef, senderRef: ActorRef): Unit = {
+    log.info(s">>> [MessageProxyRemoteActor] SendOut($data)")
     proxyRouter ! ApiOutgoingMessage(data,
       fromActor = senderRef.path.toSerializationFormat,
       toActor = Some(to))
+  }
+
+  @scala.throws[Exception](classOf[Exception])
+  override def postStop(): Unit = {
+    log.info(s">>> [MessageProxyRemoteActor] STOP !!!")
+    super.postStop()
   }
 }
