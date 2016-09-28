@@ -1,11 +1,8 @@
 package javafx.mvc.example
 
 import java.net.InetSocketAddress
-
 import akka.actor._
 import akka.serialization._
-import carsale.microservice.api.example.{MessageExtractor, MessageSerializer}
-
 import scala.concurrent.Future
 
 object IOClient {
@@ -86,7 +83,8 @@ class IOClient(serverHost: String, serverPort: Int)
     implicit val as = context.system
     //Future {
     if (isNeedSleep) Thread.sleep(1000)
-    IO(Tcp).tell(Connect(remoteAddress = new InetSocketAddress(serverHost, serverPort)), conn)
+    val socketOpts = List(SO.TcpNoDelay(on = true))
+    IO(Tcp).tell(Connect(remoteAddress = new InetSocketAddress(serverHost, serverPort), options = socketOpts), conn)
     //}
   }
 }

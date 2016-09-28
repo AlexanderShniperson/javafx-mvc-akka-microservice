@@ -12,10 +12,10 @@ import carsale.microservice.api.example.ApiMessages._
 
 class CarTypeManager(ctrl: CarTypeControllerImpl) extends Actor with ActorLogging {
   override def receive: Receive = {
-    case msg: GetCarType => MainApp.ioConnection ! msg
+    case msg: GetCarType =>
+      MainApp.ioConnection ! msg
     case msg: CarTypeReply =>
-      // log.info(s">>> Received $msg")
-      // ctrl.addItem(new CarTypeModel(RecordState.None, msg.id, msg.name))
+      ctrl.addItem(new CarTypeModel(RecordState.None, msg.id, msg.name))
   }
 }
 

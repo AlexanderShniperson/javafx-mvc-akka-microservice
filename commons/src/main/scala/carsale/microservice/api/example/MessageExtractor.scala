@@ -1,41 +1,66 @@
 package carsale.microservice.api.example
 
 import java.nio.{ByteBuffer, ByteOrder}
+
+import akka.actor._
 import akka.util.ByteString
 
-trait MessageExtractor {
+object MessageExtractor {
+
+  case class MessageBuild(data: Array[Byte])
+
+  case class MessageBuildReply(data: ByteString)
+
+  case class MessageExtract(data: ByteString)
+
+  case class MessageExtractReply(data: Array[Byte])
+
+  def props(): Props = {
+    Props(classOf[MessageExtractor])
+  }
+}
+
+private class MessageExtractor extends Actor {
+
+  import MessageExtractor._
+
   private final val byteOrder = ByteOrder.LITTLE_ENDIAN
   private final val headerSize = 4
+  private var buffer = ByteString.empty
+
+  case object HasBytes
+
+  override def receive: Receive = {
+    case MessageBuild(data) =>
+      context.parent ! MessageBuildReply(buildMessage(data))
+
+    case MessageExtract(data) =>
+      buffer ++= data
+      extractMessage()
+
+    case HasBytes =>
+      extractMessage()
+  }
 
   def buildMessage(value: Array[Byte]): ByteString = {
     val length = value.length + headerSize
     val result = ByteString.newBuilder
     result.putLongPart(length, headerSize)(byteOrder)
     result.putBytes(value)
-    val res = result.result()
-    println(s"[MessageExtractor] buildMessage origMessage(${value.length}) calc($length) final(${res.length})")
-    res
+    result.result()
   }
 
-  def extractMessage(value: Array[Byte]): List[Array[Byte]] = {
-    var result = List.empty[Array[Byte]]
-    var buffer = value
-    var messageLength = 0
-    var i = 0
-    while (buffer.length > 0) {
-      messageLength = ByteBuffer.wrap(buffer.take(headerSize)).order(byteOrder).getInt
+  def extractMessage(): Unit = {
+    if (buffer.length >= headerSize) {
+      val messageLength = buffer.iterator.getLongPart(headerSize)(byteOrder).toInt
       buffer = buffer.drop(headerSize)
-      if (messageLength > 0 && buffer.length > 0) {
+      if (messageLength > 0 && buffer.nonEmpty) {
         val canTakeBytes = messageLength.min(buffer.length)
-        result ::= buffer.take(canTakeBytes)
-        println(s"[MessageExtractor] extractMessage length($messageLength) afterBuff(${buffer.length - canTakeBytes}) curMsg(${canTakeBytes})")
+        context.parent ! MessageExtractReply(buffer.take(canTakeBytes).toArray)
         buffer = buffer.drop(canTakeBytes)
       }
-      i+=1
-      messageLength = 0
-      println(s">>> Iter($i) bufLen(${buffer.length})")
+      if (buffer.nonEmpty)
+        self ! HasBytes
     }
-    result
   }
-
 }

@@ -18,7 +18,7 @@ private class MessageProxyRemoteActor(proxyRouter: ActorRef, to: String) extends
 
   log.info(s"[MessageProxyRemoteActor] created for $to")
 
-  def receive = {
+  override def receive: Receive = {
     case msg: RemoteTerminated =>
       context.parent ! msg
       context stop self
@@ -30,7 +30,6 @@ private class MessageProxyRemoteActor(proxyRouter: ActorRef, to: String) extends
   }
 
   private def sendOut(data: AnyRef, senderRef: ActorRef): Unit = {
-    log.info(s">>> [MessageProxyRemoteActor] SendOut($data)")
     proxyRouter ! ApiOutgoingMessage(data,
       fromActor = senderRef.path.toSerializationFormat,
       toActor = Some(to))

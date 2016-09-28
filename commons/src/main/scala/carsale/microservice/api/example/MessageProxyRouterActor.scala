@@ -1,5 +1,7 @@
 package carsale.microservice.api.example
 
+import java.nio.{ByteBuffer, ByteOrder}
+
 import akka.actor._
 import akka.io.Tcp.{Received, Write}
 import akka.serialization.Serializer
@@ -18,33 +20,30 @@ object MessageProxyRouterActor {
 
 private class ApiMessageProxyRouterActor(connectionHandler: ActorRef, messageProcessor: ActorRef, serializer: Serializer)
   extends Actor
-    with ActorLogging
-    with MessageExtractor
-    with MessageSerializer {
+    with ActorLogging {
 
   import MessageProxyRouterActor.ApiOutgoingMessage
+  import carsale.microservice.api.example.MessageExtractor._
 
   private var localRefs = Map.empty[String, ActorRef]
+  private val messageExtractor = context.actorOf(MessageExtractor.props())
 
   override def receive: Receive = {
     case Received(data) =>
-      implicit val ser = serializer
-      extractMessage(data.toArray).foreach(r => deserializeMsg(r).foreach(self ! _))
+      messageExtractor ! MessageExtract(data)
+
+    case MessageExtractReply(data) => deserializeMsg(data).foreach(self ! _)
 
     /**
       * This part only for Server side, when message coming from Client and recipient is unknown
       */
     case msg@ApiIncomingMessage(bytes, fromActor, None) =>
-      log.info(s">>> [ApiMessageProxyRouterActor] ApiIncomingMessage($fromActor, None) #1")
-      implicit val ser = serializer
       deserializeMsg(bytes).foreach(x => messageProcessor.tell(x, getOrCreateProxyRemoteActor(fromActor)))
 
     /**
       * This part for both Client and Server
       */
     case msg@ApiIncomingMessage(bytes, fromActor, Some(toActor)) =>
-      log.info(s">>> [ApiMessageProxyRouterActor] ApiIncomingMessage($fromActor, $toActor) #2")
-      implicit val ser = serializer
       localRefs.get(toActor) match {
         case None => log.error(s"[${getClass.getName}] received IncomingMessage($fromActor, $toActor) but Local actor is not found!")
         case Some(toActorRef) =>
@@ -53,21 +52,20 @@ private class ApiMessageProxyRouterActor(connectionHandler: ActorRef, messagePro
       }
 
     case msg@ApiOutgoingMessage(data, from, to) =>
-      log.info(s">>> [ApiMessageProxyRouterActor] ApiOutgoingMessage($from, $to) #1")
-      implicit val ser = serializer
       if (from == sender().path.toSerializationFormat && localRefs.get(from).isEmpty) {
         context.watch(sender())
         localRefs = localRefs.updated(from, sender())
       }
-      //       connectionHandler ! Write(serializeMsg(data, from, to))
-      connectionHandler ! Write(buildMessage(wrap2Incoming(data, from, to)))
+      messageExtractor ! MessageBuild(wrap2Incoming(data, from, to))
+
+    case MessageBuildReply(data) =>
+      println(s">>> sendOut(${data.length})")
+      connectionHandler ! Write(data)
 
     case Terminated(actorRef) =>
-      log.info(s">>> [ApiMessageProxyRouterActor] Terminated($actorRef)")
       releaseLocal(actorRef)
 
     case RemoteTerminated(Some(from)) =>
-      log.info(s">>> [ApiMessageProxyRouterActor] TerminatedRemote($from)")
       context.child(getProxyRemoteName(from)).foreach(ref => {
         context.stop(ref)
       })
@@ -87,10 +85,9 @@ private class ApiMessageProxyRouterActor(connectionHandler: ActorRef, messagePro
   }
 
   private def releaseLocal(localActor: ActorRef): Unit = {
-    implicit val ser = serializer
     localRefs.find(_._2 == localActor).foreach(e => {
       val pathSerialized = e._2.path.toSerializationFormat
-      connectionHandler ! Write(buildMessage(serializeMsg(RemoteTerminated(Some(pathSerialized))).get))
+      messageExtractor ! MessageBuild(serializeMsg(RemoteTerminated(Some(pathSerialized))).get)
     })
     localRefs = localRefs.filterNot(_._2 == localActor)
   }
@@ -99,5 +96,38 @@ private class ApiMessageProxyRouterActor(connectionHandler: ActorRef, messagePro
   override def postStop(): Unit = {
     super.postStop()
     log.info(s"[${getClass.getName}] STOP!!!")
+  }
+
+  def serializeMsg(value: AnyRef): Option[Array[Byte]] = {
+    Try {
+      serializer.toBinary(value)
+    } match {
+      case Success(s) => Some(s)
+      case Failure(f) =>
+        println(s"[MessageSerializer] serializeMsg Error ${f.getLocalizedMessage}")
+        None
+    }
+  }
+
+  def deserializeMsg(value: Array[Byte]): Option[AnyRef] = {
+    Try {
+      serializer.fromBinary(value)
+    } match {
+      case Success(s) => Some(s)
+      case Failure(f) =>
+        println(s"[MessageSerializer] deserializeMsg Error ${f.getLocalizedMessage} dataLen(${value.length})")
+        None
+    }
+  }
+
+  def wrap2Incoming(data: AnyRef, from: String, to: Option[String]): Array[Byte] = {
+    Try {
+      serializeMsg(ApiIncomingMessage(serializeMsg(data).get, from, to)).get
+    } match {
+      case Success(s) => s
+      case Failure(f) =>
+        println(s"[MessageSerializer] wrap2Incoming Error ${f.getLocalizedMessage}")
+        Array.empty
+    }
   }
 }
