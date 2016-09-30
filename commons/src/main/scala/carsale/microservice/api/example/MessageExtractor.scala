@@ -1,7 +1,5 @@
 package carsale.microservice.api.example
 
-import java.nio.{ByteBuffer, ByteOrder}
-
 import akka.actor._
 import akka.util.ByteString
 
@@ -24,7 +22,7 @@ private class MessageExtractor extends Actor {
 
   import MessageExtractor._
 
-  private final val byteOrder = ByteOrder.LITTLE_ENDIAN
+  private final val byteOrder = java.nio.ByteOrder.LITTLE_ENDIAN
   private final val headerSize = 4
   private var buffer = ByteString.empty
 
@@ -43,9 +41,8 @@ private class MessageExtractor extends Actor {
   }
 
   def buildMessage(value: Array[Byte]): ByteString = {
-    val length = value.length + headerSize
     val result = ByteString.newBuilder
-    result.putLongPart(length, headerSize)(byteOrder)
+    result.putLongPart(value.length, headerSize)(byteOrder)
     result.putBytes(value)
     result.result()
   }

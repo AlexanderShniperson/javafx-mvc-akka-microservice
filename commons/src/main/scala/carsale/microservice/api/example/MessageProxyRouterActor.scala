@@ -1,13 +1,7 @@
 package carsale.microservice.api.example
 
-import java.nio.{ByteBuffer, ByteOrder}
-
 import akka.actor._
-import akka.io.Tcp.{Received, Write}
 import akka.serialization.Serializer
-import akka.util.ByteString
-
-import scala.util.{Failure, Success, Try}
 
 object MessageProxyRouterActor {
 
@@ -24,6 +18,8 @@ private class ApiMessageProxyRouterActor(connectionHandler: ActorRef, messagePro
 
   import MessageProxyRouterActor.ApiOutgoingMessage
   import carsale.microservice.api.example.MessageExtractor._
+  import akka.io.Tcp.{Received, Write}
+  import scala.util.{Failure, Success, Try}
 
   private var localRefs = Map.empty[String, ActorRef]
   private val messageExtractor = context.actorOf(MessageExtractor.props())
@@ -59,7 +55,6 @@ private class ApiMessageProxyRouterActor(connectionHandler: ActorRef, messagePro
       messageExtractor ! MessageBuild(wrap2Incoming(data, from, to))
 
     case MessageBuildReply(data) =>
-      println(s">>> sendOut(${data.length})")
       connectionHandler ! Write(data)
 
     case Terminated(actorRef) =>
